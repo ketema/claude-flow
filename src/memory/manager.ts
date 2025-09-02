@@ -9,6 +9,7 @@ import { MemoryError } from '../utils/errors.js';
 import type { IMemoryBackend } from './backends/base.js';
 import { SQLiteBackend } from './backends/sqlite.js';
 import { MarkdownBackend } from './backends/markdown.js';
+import { PostgreSQLBackend } from './backends/postgresql.js';
 import { MemoryCache } from './cache.js';
 import { MemoryIndexer } from './indexer.js';
 
@@ -407,6 +408,19 @@ export class MemoryManager implements IMemoryManager {
         return new SQLiteBackend(this.config.sqlitePath || './claude-flow.db', this.logger);
       case 'markdown':
         return new MarkdownBackend(this.config.markdownDir || './memory', this.logger);
+      case 'postgresql':
+        if (!this.config.postgresql?.connectionString) {
+          throw new MemoryError('PostgreSQL connection string is required when using postgresql backend');
+        }
+        return new PostgreSQLBackend(
+          this.config.postgresql.connectionString,
+          this.logger,
+          {
+            max: this.config.postgresql.poolSize,
+            idleTimeoutMillis: this.config.postgresql.idleTimeoutMillis,
+            connectionTimeoutMillis: this.config.postgresql.connectionTimeoutMillis,
+          }
+        );
       case 'hybrid':
         // Use SQLite for structured data and Markdown for human-readable backup
         return new HybridBackend(

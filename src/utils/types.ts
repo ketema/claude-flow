@@ -284,14 +284,25 @@ export interface TerminalConfig {
   commandTimeout: number;
 }
 
+// Define unified backend types
+export type MemoryBackendType = 'sqlite' | 'markdown' | 'hybrid' | 'postgresql';
+
+export interface PostgreSQLConfig {
+  connectionString: string;
+  poolSize?: number;
+  idleTimeoutMillis?: number;
+  connectionTimeoutMillis?: number;
+}
+
 export interface MemoryConfig {
-  backend: 'sqlite' | 'markdown' | 'hybrid';
+  backend: MemoryBackendType;
   cacheSizeMB: number;
   syncInterval: number;
   conflictResolution: 'last-write' | 'crdt' | 'manual';
   retentionDays: number;
   sqlitePath?: string;
   markdownDir?: string;
+  postgresql?: PostgreSQLConfig;
 }
 
 export interface CoordinationConfig {

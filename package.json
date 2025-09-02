@@ -115,6 +115,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "@types/better-sqlite3": "^7.6.13",
+    "@types/pg": "^8.10.9",
     "blessed": "^0.1.81",
     "chalk": "^4.1.2",
     "cli-table3": "^0.6.3",
@@ -129,6 +130,7 @@
     "nanoid": "^5.0.4",
     "ora": "^7.0.1",
     "p-queue": "^8.1.0",
+    "pg": "^8.11.3",
     "ruv-swarm": "^1.0.14",
     "ws": "^8.18.3",
     "yaml": "^2.8.0"

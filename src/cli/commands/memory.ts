@@ -6,6 +6,9 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import { promises as fs } from 'node:fs';
 import * as Table from 'cli-table3';
+import { migrateClaudeFlowData } from '../../memory/migrations/sqlite-to-postgresql.js';
+import { Logger } from '../../core/logger.js';
+import type { LoggingConfig } from '../../utils/types.js';
 
 interface MemoryEntry {
   key: string;
@@ -261,5 +264,66 @@ memoryCommand
       console.log(`🗑️  Removed: ${removed} entries older than ${options.days} days`);
     } catch (error) {
       console.error(chalk.red('Failed to cleanup:'), (error as Error).message);
+    }
+  });
+
+// Migration command
+memoryCommand
+  .command('migrate')
+  .description('Migrate memory data from SQLite to PostgreSQL')
+  .arguments('<sqlitePath> <postgresConnectionString>')
+  .option('--dry-run', 'Perform a dry run without actually migrating data', false)
+  .option('--batch-size <size>', 'Number of entries to process in each batch', '1000')
+  .option('--verify', 'Verify migration after completion', false)
+  .action(async (sqlitePath: string, postgresConnectionString: string, options: any) => {
+    try {
+      console.log(chalk.blue('🚀 Starting Claude Flow memory migration...'));
+      console.log(`📂 SQLite Path: ${sqlitePath}`);
+      console.log(`🐘 PostgreSQL: ${postgresConnectionString.replace(/:[^:@]+@/, ':****@')}`);
+      console.log(`🔄 Mode: ${options.dryRun ? 'DRY RUN' : 'LIVE MIGRATION'}`);
+      console.log(`📦 Batch Size: ${options.batchSize}`);
+      console.log();
+
+      const loggerConfig: LoggingConfig = {
+        level: 'info',
+        format: 'text',
+        destination: 'console'
+      };
+      const logger = new Logger(loggerConfig);
+
+      const startTime = Date.now();
+      
+      const stats = await migrateClaudeFlowData(
+        sqlitePath,
+        postgresConnectionString,
+        logger,
+        {
+          dryRun: options.dryRun,
+          batchSize: parseInt(options.batchSize),
+          verify: options.verify
+        }
+      );
+
+      const duration = Date.now() - startTime;
+      
+      console.log(chalk.green('\n✅ Migration completed successfully!'));
+      console.log(chalk.blue('\n📊 Migration Statistics:'));
+      console.log(`   Total Entries: ${stats.totalEntries}`);
+      console.log(`   Migrated: ${stats.migratedEntries}`);
+      console.log(`   Skipped: ${stats.skippedEntries}`);
+      console.log(`   Errors: ${stats.errors}`);
+      console.log(`   Duration: ${(duration / 1000).toFixed(2)}s`);
+      
+      if (stats.errors > 0) {
+        console.log(chalk.yellow(`\n⚠️  ${stats.errors} entries had errors during migration`));
+      }
+      
+      if (options.dryRun) {
+        console.log(chalk.cyan('\n💡 This was a dry run. Use without --dry-run to perform actual migration.'));
+      }
+      
+    } catch (error) {
+      console.error(chalk.red('\n❌ Migration failed:'), (error as Error).message);
+      process.exit(1);
     }
   });

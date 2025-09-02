@@ -352,7 +352,7 @@ export class ConfigManager {
     this.validationRules.set('memory.backend', {
       type: 'string',
       required: true,
-      values: ['sqlite', 'markdown', 'hybrid'],
+      values: ['sqlite', 'markdown', 'hybrid', 'postgresql'] as const,
     });
 
     this.validationRules.set('memory.cacheSizeMB', {
@@ -742,7 +742,7 @@ export class ConfigManager {
         commandTimeout: { type: 'number', min: 1000, max: 3600000 },
       },
       memory: {
-        backend: { type: 'string', values: ['sqlite', 'markdown', 'hybrid'] },
+        backend: { type: 'string', values: ['sqlite', 'markdown', 'hybrid', 'postgresql'] as const },
         cacheSizeMB: { type: 'number', min: 1, max: 10000 },
         syncInterval: { type: 'number', min: 1000, max: 300000 },
         conflictResolution: { type: 'string', values: ['crdt', 'timestamp', 'manual'] },
@@ -960,11 +960,25 @@ export class ConfigManager {
 
     // Memory settings
     const memoryBackend = process.env.CLAUDE_FLOW_MEMORY_BACKEND;
-    if (memoryBackend === 'sqlite' || memoryBackend === 'markdown' || memoryBackend === 'hybrid') {
+    if (memoryBackend === 'sqlite' || memoryBackend === 'markdown' || memoryBackend === 'hybrid' || memoryBackend === 'postgresql') {
       config.memory = {
         ...DEFAULT_CONFIG.memory,
         ...config.memory,
         backend: memoryBackend,
+      };
+    }
+
+    // PostgreSQL connection string from environment
+    const pgConnectionString = process.env.CLAUDE_FLOW_POSTGRES_CONNECTION_STRING;
+    const pgPoolSize = process.env.CLAUDE_FLOW_POSTGRES_POOL_SIZE;
+    if (pgConnectionString || pgPoolSize) {
+      config.memory = {
+        ...DEFAULT_CONFIG.memory,
+        ...config.memory,
+        postgresql: {
+          connectionString: pgConnectionString,
+          poolSize: pgPoolSize ? parseInt(pgPoolSize, 10) : undefined,
+        },
       };
     }
 
