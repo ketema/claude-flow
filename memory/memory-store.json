@@ -527,6 +527,18 @@
       "value": "Test strategy: Testing claude-flow basic functionality. Unit tests for core commands and utilities, integration tests for API endpoints and MCP tools, e2e tests for complete workflows. Mocking: External services, GitHub API, MCP servers. Coverage target: 95%.",
       "namespace": "default",
       "timestamp": 1755362446482
+    },
+    {
+      "key": "test_key",
+      "value": "PostgreSQL backend test",
+      "namespace": "default",
+      "timestamp": 1756794049452
+    },
+    {
+      "key": "test_global_postgresql",
+      "value": "Testing global PostgreSQL functionality",
+      "namespace": "default",
+      "timestamp": 1756794437780
     }
   ]
 }
